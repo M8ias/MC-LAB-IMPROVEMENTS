@@ -1,8 +1,11 @@
 import math
+from observer.observer.math_tools import yaw2quat
 import numpy as np
+import rospy
 
-from Kinematics import Rzyx
-
+from Kinematics import yaw2quat, Rzyx
+from nav_msgs.msg import Odometry
+from std_msgs.msg import Float64MultiArray
 
 # The C/S enterprise I object
 class CSEI:
@@ -11,7 +14,7 @@ class CSEI:
     kinematics and dynamics of the ship, as well as the operations required to
     "move" the ship over one time-step
     """
-    # Class attributes
+    ### Main data of the C/S Enterprise. Do not touch ###
     __M = np.array([[16.11, 0.0, 0.0], [0.0, 24.11, 0.5291], [0.0, 0.5291, 2.7600]])  # Inertia matrix
     _X = np.array([[-0.655, 0.3545, -3.787], [0.0, -2.443, 0], [0.0, 0.0, 0.0]])  # Damping coefficients in surge
     _Y = np.array([[-1.33, -2.776, -64.91], [-2.8, -3.450, 0], [-0.805, -0.845, 0]])  # Damping coeffcients in sway
@@ -24,6 +27,8 @@ class CSEI:
     _L = np.array([[-0.4574, -0.4574, 0.3875], [-0.055, 0.055, 0]])  # Placement of actuators
     _K = np.array([[1.03, 0, 0], [0, 1.03, 0], [0, 0, 2.629]])  # K-matrix
 
+    ### Initialization ###
+
     def __init__(self, eta0):
         self.D = np.array([np.zeros(3), np.zeros(3), np.zeros(3)])
         self.C = np.array([np.zeros(3), np.zeros(3), np.zeros(3)])
@@ -32,7 +37,14 @@ class CSEI:
         self.tau = np.array([[0], [0], [0]])  # Zero forces and moments at initialization
         self.nu_dot = np.array([[0], [0], [0]])
         self.eta_dot = np.array([[0], [0], [0]])
-
+        self.odom = Odometry() #Msg to be published
+        self.pubOdom = rospy.Publisher('/qualisys/CSEI/odom', Odometry, queue_size=1)
+        self.subU = rospy.Subscriber('/CSEI/u', Float64MultiArray, callback)
+        self.u = np.zeros(5)
+        self.publishOdom()
+  
+    ### Computation ###
+        
     def set_D(self):
         u = self.nu[0]
         v = self.nu[1]
@@ -42,7 +54,7 @@ class CSEI:
         d33 = -self._Z[1][0] - self._Z[1][1]*np.abs(r) - self._Z[1][2]*(r**2) - self._Z[2][1]*np.abs(v)
         d23 = -self._Y[1][0] - self._Y[1][1]*np.abs(r) - self._Y[1][2]*(r**2) - self._Y[2][1]*np.abs(v)
         d32 = -self._Z[0][0] - self._Z[0][1]*np.abs(v) - self._Z[0][2]*(v**2) - self._Z[2][0]*np.abs(r)
-        d11 = d11[0]  # This is pretty scuffed and should be optimized. Just need to fin out why it returns a 1x1 vector
+        d11 = d11[0]  # This is pretty scuffed and should be done differently. Just need to find out why it returns a 1x1 array
         d22 = d22[0]
         d33 = d33[0]
         d23 = d23[0]
@@ -95,4 +107,58 @@ class CSEI:
 
     def get_nu(self):
         return self.nu
+
+    ### Publishers and subscribers ###   
+
+    def nav_msg(self):
+        """
+        Computes the Odometry message of the ship
+        """
+        quat = yaw2quat(self.eta[2][0])
+
+        self.odom.pose.pose.position.x = self.eta[0]
+        self.odom.pose.pose.position.y = self.eta[1]
+        self.odom.pose.pose.position.z = 0
+        self.odom.pose.pose.orientation.w = quat[0]
+        self.odom.pose.pose.orientation.x = quat[1]
+        self.odom.pose.pose.orientation.y = quat[2]
+        self.odom.pose.pose.orientation.z = quat[3]
+
+        self.odom.twist.twist.linear.x = self.nu[0]
+        self.odom.twist.twist.linear.y = self.nu[1]
+        self.odom.twist.twist.linear.z = 0
+        self.odom.twist.twist.angular.x = 0
+        self.odom.twist.twist.angular.y = 0
+        self.odom.twist.twist.angular.z = self.nu[2]
+
+    def get_odom(self):
+        return self.odom
+
+    def publishOdom(self):
+        self.nav_msg()
+        self.pubOdom.publish(self.odom)
+    
+    #Upon a new U, move the ship
+    def callback(self, msg):
+        self.u = msg.data
+        self.set_C()  # Coreolis matrix
+        self.set_D()  # Compute damping matrix
+        self.set_tau(self.u) # Compute the force vector
+        self.set_nu(0.01)   # Compute the velocity
+        self.set_eta(0.01)  # Compute the position
+        self.publishOdom() # Publish the new position
+
+
+    ### End of publishers and subscribers ###
+
+
+def main():
+    initial_conditions = np.array([[0],[0],[math.pi/2]])
+    rospy.init_node('HIL_simulation')
+    ship = CSEI(initial_conditions)
+    rospy.spin()
+    rospy.shutdown()
+
+if __name__ == '__main__':
+    main()
 
