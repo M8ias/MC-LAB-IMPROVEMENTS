@@ -16,16 +16,22 @@ class CSEI:
     """
     ### Main data of the C/S Enterprise. Do not touch ###
     __M = np.array([[16.11, 0.0, 0.0], [0.0, 24.11, 0.5291], [0.0, 0.5291, 2.7600]])  # Inertia matrix
-    _X = np.array([[-0.655, 0.3545, -3.787], [0.0, -2.443, 0], [0.0, 0.0, 0.0]])  # Damping coefficients in surge
-    _Y = np.array([[-1.33, -2.776, -64.91], [-2.8, -3.450, 0], [-0.805, -0.845, 0]])  # Damping coeffcients in sway
-    _Z = np.array([[0, -0.2088, 0], [-1.90, -0.75, 0], [0.130, 0.080, 0]])  # Damping coeffcients in yaw
+    _X = np.array([[-0.655, 0.3545, -3.787], 
+                    [0.0, -2.443, 0.0], 
+                    [0.0, 0.0, 0.0]])  # Damping coefficients in surge
+    _Y = np.array([[-1.33, -2.776, -64.91], 
+                    [-2.8, -3.450, 0], 
+                    [-0.805, -0.845, 0]])  # Damping coeffcients in sway
+    _Z = np.array([[0, -0.2088, 0], 
+                   [-1.90, -0.75, 0], 
+                   [0.130, 0.080, 0]])  # Damping coeffcients in yaw
     _A = np.array([[-2.0, 0.0, 0.0], [0.0, -10.0, 0.0], [0.0, 0.0, -1.0]])  # Added mass matrix
     _m = 14.11  # Rigid body mass
     _Iz = 1.7600  # Inertial moment
     _xg = 0.0375  # Center of gravity
 
     _L = np.array([[-0.4574, -0.4574, 0.3875], [-0.055, 0.055, 0]])  # Placement of actuators
-    _K = np.array([[1.03, 0, 0], [0, 1.03, 0], [0, 0, 2.629]])  # K-matrix
+    _K = np.diag(np.diag([1.03, 1.03, 2.629]))  # K-matrix
 
     ### Initialization ###
 
@@ -41,24 +47,19 @@ class CSEI:
         self.pubOdom = rospy.Publisher('/qualisys/CSEI/odom', Odometry, queue_size=1)
         self.subU = rospy.Subscriber('/CSEI/u', Float64MultiArray, callback)
         self.u = np.zeros(5)
-        self.publishOdom()
-  
+        self.publishOdom() #Publishes the initial state to odometry
+        self.dt
     ### Computation ###
         
     def set_D(self):
         u = self.nu[0]
         v = self.nu[1]
         r = self.nu[2]
-        d11 = -self._X[0][0] - self._X[0][1]*np.abs(u) - self._X[0][2]*(u**2)
-        d22 = -self._Y[0][0] - self._Y[0][1]*np.abs(v) - self._Y[0][2]*(v**2) - self._Y[2][0]*np.abs(r)
-        d33 = -self._Z[1][0] - self._Z[1][1]*np.abs(r) - self._Z[1][2]*(r**2) - self._Z[2][1]*np.abs(v)
-        d23 = -self._Y[1][0] - self._Y[1][1]*np.abs(r) - self._Y[1][2]*(r**2) - self._Y[2][1]*np.abs(v)
-        d32 = -self._Z[0][0] - self._Z[0][1]*np.abs(v) - self._Z[0][2]*(v**2) - self._Z[2][0]*np.abs(r)
-        d11 = d11[0]  # This is pretty scuffed and should be done differently. Just need to find out why it returns a 1x1 array
-        d22 = d22[0]
-        d33 = d33[0]
-        d23 = d23[0]
-        d32 = d32[0]
+        d11 = (-self._X[0][0] - self._X[0][1]*np.abs(u) - self._X[0][2]*(u**2))[0]
+        d22 = (-self._Y[0][0] - self._Y[0][1]*np.abs(v) - self._Y[0][2]*(v**2) - self._Y[2][0]*np.abs(r))[0]
+        d33 = (-self._Z[1][0] - self._Z[1][1]*np.abs(r) - self._Z[1][2]*(r**2) - self._Z[2][1]*np.abs(v))[0]
+        d23 = (-self._Y[1][0] - self._Y[1][1]*np.abs(r) - self._Y[1][2]*(r**2) - self._Y[2][1]*np.abs(v))[0]
+        d32 = (-self._Z[0][0] - self._Z[0][1]*np.abs(v) - self._Z[0][2]*(v**2) - self._Z[2][0]*np.abs(r))[0] #np.arrays are scuffed
         new_D = np.array([[d11, 0, 0], [0, d22, d23], [0, d32, d33]])
         self.D = new_D  # Designates the damping matrix
 
@@ -66,10 +67,8 @@ class CSEI:
         u = self.nu[0]
         v = self.nu[1]
         r = self.nu[2]
-        c13 = -(self._m - self._A[1][1])*v - (self._m*self._xg - self._A[2][1])*r
-        c23 = (self._m - self._A[0][0])*u
-        c13 = c13[0]  # See comment about scuffedness above
-        c23 = c23[0]
+        c13 = (-(self._m - self._A[1][1])*v - (self._m*self._xg - self._A[2][1])*r)[0]
+        c23 = ((self._m - self._A[0][0])*u)[0]
         new_C = np.array([[0, 0, c13], [0, 0, c23], [-c13, -c23, 0]])
         self.C = new_C
 
@@ -86,18 +85,18 @@ class CSEI:
         new_tau = np.dot(np.dot(self._K, B), u_t)
         self.tau = new_tau
 
-    def set_eta(self, dt):
+    def set_eta(self):
         psi = self.eta[2]
         R = Rzyx(psi)
         self._eta_dot = np.dot(R, self.nu)
-        self.eta = self.eta + dt*self._eta_dot
+        self.eta = self.eta + self.dt*self._eta_dot
 
-    def set_nu(self, dt):
+    def set_nu(self):
         nom = self.__M
         den = self.tau - np.dot((self.C + self.D), self.nu)
-        nom_inv = np.linalg.inv(nom)
-        self.nu_dot = np.dot(nom_inv, den)
-        self.nu = self.nu + dt*self.nu_dot  # Integration
+        M_inv = np.linalg.inv(nom) # Inverts the inertia matrix
+        self.nu_dot = np.dot(M_inv, den)
+        self.nu = self.nu + self.dt*self.nu_dot  # Integration, forward euler
 
     def get_tau(self):
         return self.tau

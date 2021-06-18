@@ -3,7 +3,13 @@ from lib import odometry, ps4, Udata
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64MultiArray
 import math
+import numpy as np
 
+"""
+stud_code_joy_controller.py is to contain all thrust allocation algorithms. 
+
+
+"""
 
 # all buttons = 1 while pressed and 0 while not pressed
 # ps4.x -- for x button
@@ -48,8 +54,6 @@ import math
 # odometry.twist.twist.linear.y
 # odometry.twist.twist.linear.z
 
-
-
 # Udata.publish(data) where data is a 5 elements long vector containing five floats, publishes your controll vector to ROS.
 # [
 # leftRotorThrust,
@@ -59,17 +63,67 @@ import math
 # rightRotorAngle
 # ]
 
+# Deafault and should always be here
+def sixaxis2thruster(lStickX, lStickY, rStickX, rStickY, R2, L2):
+    """
+    sixaxis2thruster()directly maps the sixaxis playstation controller inputs
+    to the vessel actuators.
+    """
+    ### Acutator commands ###
+    u1 = math.sqrt(lStickX ** 2  + rStickY ** 2)
+    u2 = math.sqrt(rStickX ** 2 + rStickY ** 2)
+    u3 = (R2 - L2)
+
+    ### VSD angles ###
+    alpha1 = math.atan2(lStickY, lStickX)
+    alpha2 = math.atan2(rStickY, rStickX)
+
+    u = np.array([u1, u2, u3, alpha1, alpha2])
+    return u
 
 
+def input_mapping(lStickX, lStickY, rStickX, rStickY, R2, L2):
+    """
+    This function maps the input from the joystick to corresponding deegre of
+    freedom. Inputs are from controller, and returns a generelized force 
+    vector tau. 
+    """
+    surge = (lStickY + rStickY)
+    sway = (lStickX + rStickX)
+    yaw = 0.5*(R2 + L2)
 
+    tau = np.array([[surge], [sway], [yaw]])
+    return tau
+
+
+def extended_thrust_allocation(tau):
+    """ 
+    An extended thrust algorithm
+    """ 
+    # Positional value for the thrusters [m]
+    lx = np.array([-0.4574, -0.4574, 0.3875])
+    ly = np.array([-0.055, 0.055, 0])
+    u = np.zeros(5)
+
+    B_ext = np.array([[1, 0, 1, 0, 0], [0, 1, 0, 1, 1], [-ly[0], lx[0], -ly[1], lx[1], lx[2]]])
+    K =np.array([
+        [1.030, 0, 0, 0, 0],
+        [0, 1.030, 0, 0, 0],
+        [0, 0, 1.030, 0, 0],
+        [0, 0, 0, 1.030, 0],
+        [0, 0, 0, 0, 2.629]
+    ])
+
+    inv_matrix = np.linalg.pinv(np.dot(B_ext, K))
+    u_ext = np.dot(inv_matrix, tau)
+    u[0] = math.sqrt(u_ext[0]**2 + u_ext[1]**2)
+    u[1] = math.sqrt(u_ext[2]**2 + u_ext[3]**2)
+    u[2] = u_ext[5]
+    u[3] = math.atan2(u_ext[1], u_ext[0])
+    u[4] = math.atan2(u_ext[3], u_ext[2])
+    return u
 
 def loop():
-
-
-    leftThrustAngle = math.atan2(ps4.lStickY, ps4.lStickX)
-    rightThrustAngle = math.atan2(ps4.rStickY, ps4.rStickX)
-    leftThrustLength = math.sqrt(ps4.lStickX ** 2 + ps4.lStickY ** 2)
-    rightThrustLength = math.sqrt(ps4.rStickX ** 2 + ps4.rStickY ** 2)
-    bowThrustLengt = (ps4.R2A - ps4.L2A)
-
-    Udata.publish([leftThrustLength, rightThrustLength, bowThrustLengt, leftThrustAngle, rightThrustAngle])
+    # Call your thrust allocation algorithm here. 
+    u = sixaxis2thruster(ps4.lStickX, ps4.lStickY, ps4.rStickX, ps4.rStickY, ps4.R2, ps4.L2)
+    Udata.publish(u)
