@@ -7,8 +7,6 @@ import numpy as np
 
 """
 stud_code_joy_controller.py is to contain all thrust allocation algorithms. 
-
-
 """
 
 # all buttons = 1 while pressed and 0 while not pressed
@@ -115,7 +113,7 @@ def extended_thrust_allocation(tau):
     ])
 
     inv_matrix = np.linalg.pinv(np.dot(B_ext, K))
-    u_ext = np.dot(inv_matrix, tau)
+    u_ext = inv_matrix @ tau
     u[0] = math.sqrt(u_ext[0]**2 + u_ext[1]**2)
     u[1] = math.sqrt(u_ext[2]**2 + u_ext[3]**2)
     u[2] = u_ext[5]

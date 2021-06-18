@@ -26,7 +26,7 @@ def test_allocation(tau):
     u[2] = u_ext[4]
     u[3] = math.atan2(u_ext[1], u_ext[0])
     u[4] = math.atan2(u_ext[3], u_ext[2])
-    return u
+    return ucd
 
 tau  = np.array([1, 1, 0.5])
 u = test_allocation(tau)

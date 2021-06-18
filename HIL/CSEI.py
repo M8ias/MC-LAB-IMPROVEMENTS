@@ -45,9 +45,11 @@ class CSEI:
         self.eta_dot = np.array([[0], [0], [0]])
         self.odom = Odometry() #Msg to be published
         self.pubOdom = rospy.Publisher('/qualisys/CSEI/odom', Odometry, queue_size=1)
+        self.pubTau = rospy.Publisher('/CSEI/tau', Float64MultiArray, queue_size=1)
         self.subU = rospy.Subscriber('/CSEI/u', Float64MultiArray, callback)
         self.u = np.zeros(5)
         self.publishOdom() #Publishes the initial state to odometry
+        self.publishTau() #Publishes the initial tau
         self.dt
     ### Computation ###
         
@@ -137,12 +139,16 @@ class CSEI:
         self.nav_msg()
         self.pubOdom.publish(self.odom)
     
+    def publishTau(self):
+        self.publishTau.publish(self.tau)
+
     #Upon a new U, move the ship
     def callback(self, msg):
         self.u = msg.data
         self.set_C()  # Coreolis matrix
         self.set_D()  # Compute damping matrix
         self.set_tau(self.u) # Compute the force vector
+        self.publishTau()   # Publish the tau, this is needed for the Observer :)
         self.set_nu(0.01)   # Compute the velocity
         self.set_eta(0.01)  # Compute the position
         self.publishOdom() # Publish the new position
