@@ -22,7 +22,7 @@ def yaw2quat(psi):
     quat = np.array((q1, 0, 0, q4))
     return quat
 
-def quat2eul(w,x, y, z):
+def quat2eul(w, x, y, z):
     """
     Returns the ZYX roll-pitch-yaw angles from a quaternion.
     """
