@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import math
 from observer.observer.math_tools import yaw2quat
 import numpy as np
@@ -51,8 +52,8 @@ class CSEI:
         self.publishOdom() #Publishes the initial state to odometry
         self.publishTau() #Publishes the initial tau
         self.dt = 0.01
+    
     ### Computation ###
-        
     def set_D(self):
         u = self.nu[0]
         v = self.nu[1]
