@@ -45,6 +45,7 @@ class CSEI:
         self.nu_dot = np.array([[0], [0], [0]])
         self.eta_dot = np.array([[0], [0], [0]])
         self.odom = Odometry() #Msg to be published
+        self.tauMsg = Float64MultiArray()
         self.pubOdom = rospy.Publisher('/qualisys/CSEI/odom', Odometry, queue_size=1)
         self.pubTau = rospy.Publisher('/CSEI/tau', Float64MultiArray, queue_size=1)
         self.subU = rospy.Subscriber('/CSEI/u', Float64MultiArray, self.callback)
@@ -141,7 +142,8 @@ class CSEI:
         self.pubOdom.publish(self.odom)
     
     def publishTau(self):
-        self.pubTau.publish(self.tau)
+        self.tauMsg.data = self.tau
+        self.pubTau.publish(self.tauMsg)
 
     #Upon a new U, move the ship
     def callback(self, msg):
