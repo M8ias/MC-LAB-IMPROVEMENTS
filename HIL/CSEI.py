@@ -16,7 +16,7 @@ class CSEI:
     "move" the ship over one time-step
     """
     ### Main data of the C/S Enterprise. Do not touch ###
-    __M = np.array([[16.11, 0.0, 0.0], [0.0, 24.11, 0.5291], [0.0, 0.5291, 2.7600]])  # Inertia matrix
+    _M = np.array([[16.11, 0.0, 0.0], [0.0, 24.11, 0.5291], [0.0, 0.5291, 2.7600]])  # Inertia matrix
     _X = np.array([[-0.655, 0.3545, -3.787], 
                     [0.0, -2.443, 0.0], 
                     [0.0, 0.0, 0.0]])  # Damping coefficients in surge
@@ -31,8 +31,13 @@ class CSEI:
     _Iz = 1.7600  # Inertial moment
     _xg = 0.0375  # Center of gravity
 
-    _L = np.array([[-0.4574, -0.4574, 0.3875], [-0.055, 0.055, 0]])  # Placement of actuators
-    _K = np.diag(np.diag([1.03, 1.03, 2.629]))  # K-matrix
+    lx1 = 0.3875
+    lx2 = -0.4574
+    lx3 = -0.4574
+    ly1 = -0.055
+    ly2 = 0.055
+    ly3 = 0
+    _K = np.diag(np.diag([2.629, 1.03, 1.03]))  # K-matrix
 
     ### Initialization ###
 
@@ -79,14 +84,14 @@ class CSEI:
     def set_tau(self, u):
         u_t = np.transpose(np.take(u, [0, 1, 2])[np.newaxis])
         alpha = np.take(u, [3, 4])
-        c1 = math.cos(alpha[0])
-        c2 = math.cos(alpha[1])
-        c3 = 0
-        s1 = math.sin(alpha[0])
-        s2 = math.sin(alpha[1])
-        s3 = 1
-        B = np.array([[c3, c1, c2], [s3, s1, s2], [self._L[0][2]*s3 - self._L[1][2]*c3, self._L[0][0]*s1 - self._L[1][0]*c1, self._L[0][1]*s1 - self._L[1][1]*c1]])
-        new_tau = np.dot(np.dot(self._K, B), u_t)
+        c2 = math.cos(alpha[0])
+        c3 = math.cos(alpha[1])
+        c1 = 0
+        s2 = math.sin(alpha[0])
+        s3 = math.sin(alpha[1])
+        s1 = 1
+        B = np.array([[c1, c2, c3], [s1, s2, s3], [self.lx1*s1-self.ly1*c1, self.lx2*s2 - self.ly2*c2, self.lx3*s3-self.ly3*s3]])
+        new_tau = (self._K @ B) @ u_t
         self.tau = new_tau
 
     def set_eta(self):
@@ -96,10 +101,8 @@ class CSEI:
         self.eta = self.eta + self.dt*self._eta_dot
 
     def set_nu(self):
-        nom = self.__M
-        den = self.tau - np.dot((self.C + self.D), self.nu)
-        M_inv = np.linalg.inv(nom) # Inverts the inertia matrix
-        self.nu_dot = np.dot(M_inv, den)
+        b = self.tau - np.dot((self.C + self.D), self.nu)
+        self.nu_dot = np.linalg.lstsq(self._M, b)
         self.nu = self.nu + self.dt*self.nu_dot  # Integration, forward euler
 
     def get_tau(self):
@@ -117,7 +120,7 @@ class CSEI:
         """
         Computes the Odometry message of the ship
         """
-        quat = yaw2quat(self.eta[2][0])
+        quat = yaw2quat(self.eta[2])
 
         self.odom.pose.pose.position.x = self.eta[0]
         self.odom.pose.pose.position.y = self.eta[1]
@@ -161,7 +164,7 @@ class CSEI:
 
 
 def main():
-    initial_conditions = np.array([[0],[0],[math.pi/2]])
+    initial_conditions = np.array([[0],[0],[0]])
     rospy.init_node('HIL_simulation')
     ship = CSEI(initial_conditions)
     rospy.spin()

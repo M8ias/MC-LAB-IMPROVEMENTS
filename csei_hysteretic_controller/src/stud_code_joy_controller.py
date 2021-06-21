@@ -64,7 +64,7 @@ stud_code_joy_controller.py is to contain all thrust allocation algorithms.
 # Deafault and should always be here
 def saturate(u):
     """
-    Saturate ensures that the input to the actuator remains bounded to the intervall [-1, 1]
+    Saturate ensures that the input to the actuator remains bounded to the interval [-1, 1]
     """
     if u > 1:
         u = 1
@@ -134,5 +134,6 @@ def extended_thrust_allocation(tau):
 
 def loop():
     # Call your thrust allocation algorithm here. 
-    u = sixaxis2thruster(ps4.lStickX, ps4.lStickY, ps4.rStickX, ps4.rStickY, ps4.R2, ps4.L2)
+    tau = input_mapping(ps4.lStickX, ps4.lStickY, ps4.rStickX, ps4.rStickY, ps4.R2, ps4.L2)
+    u = extended_thrust_allocation(tau)
     Udata.publish(u)
