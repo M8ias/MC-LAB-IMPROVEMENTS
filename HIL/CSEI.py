@@ -47,7 +47,7 @@ class CSEI:
         self.odom = Odometry() #Msg to be published
         self.pubOdom = rospy.Publisher('/qualisys/CSEI/odom', Odometry, queue_size=1)
         self.pubTau = rospy.Publisher('/CSEI/tau', Float64MultiArray, queue_size=1)
-        self.subU = rospy.Subscriber('/CSEI/u', Float64MultiArray, callback)
+        self.subU = rospy.Subscriber('/CSEI/u', Float64MultiArray, self.callback)
         self.u = np.zeros(5)
         self.publishOdom() #Publishes the initial state to odometry
         self.publishTau() #Publishes the initial tau
@@ -141,7 +141,7 @@ class CSEI:
         self.pubOdom.publish(self.odom)
     
     def publishTau(self):
-        self.publishTau.publish(self.tau)
+        self.pubTau.publish(self.tau)
 
     #Upon a new U, move the ship
     def callback(self, msg):
