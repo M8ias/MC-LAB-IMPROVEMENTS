@@ -68,9 +68,10 @@ def sixaxis2thruster(lStickX, lStickY, rStickX, rStickY, R2, L2):
     to the vessel actuators.
     """
     ### Acutator commands ###
-    u1 = math.sqrt(lStickX ** 2  + rStickY ** 2)
-    u2 = math.sqrt(rStickX ** 2 + rStickY ** 2)
-    u3 = (R2 - L2)
+    u1 = (R2 - L2)
+    u2 = math.sqrt(lStickX ** 2  + lStickY ** 2)
+    u3 = math.sqrt(rStickX ** 2 + rStickY ** 2)
+
 
     ### VSD angles ###
     alpha1 = math.atan2(lStickY, lStickX)
@@ -103,22 +104,22 @@ def extended_thrust_allocation(tau):
     ly = np.array([-0.055, 0.055, 0])
     u = np.zeros(5)
 
-    B_ext = np.array([[1, 0, 1, 0, 0], [0, 1, 0, 1, 1], [-ly[0], lx[0], -ly[1], lx[1], lx[2]]])
+    B_ext = np.array([[0, 1, 0, 1, 0], [1, 0, 1, 0, 1], [lx[2], -ly[0], lx[0], -ly[1], lx[1]]])
     K =np.array([
-        [1.030, 0, 0, 0, 0],
+        [2.629, 0, 0, 0, 0],
         [0, 1.030, 0, 0, 0],
         [0, 0, 1.030, 0, 0],
         [0, 0, 0, 1.030, 0],
-        [0, 0, 0, 0, 2.629]
+        [0, 0, 0, 0, 1.030]
     ])
 
     inv_matrix = np.linalg.pinv(np.dot(B_ext, K))
     u_ext = inv_matrix @ tau
-    u[0] = math.sqrt(u_ext[0]**2 + u_ext[1]**2)
-    u[1] = math.sqrt(u_ext[2]**2 + u_ext[3]**2)
-    u[2] = u_ext[5]
-    u[3] = math.atan2(u_ext[1], u_ext[0])
-    u[4] = math.atan2(u_ext[3], u_ext[2])
+    u[0] = u_ext[0]
+    u[1] = math.sqrt(u_ext[1]**2 + u_ext[2]**2)
+    u[2] = math.sqrt(u_ext[3]**2 + u_ext[4]**2)
+    u[3] = math.atan2(u_ext[2], u_ext[1])
+    u[4] = math.atan2(u_ext[4], u_ext[3])
     return u
 
 def loop():

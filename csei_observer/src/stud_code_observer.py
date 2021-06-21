@@ -18,12 +18,18 @@ def compute_tau(u):
         tau = (K @ B) @ u_t)
         return tau
 
-def linear_ship_dynamics(eta_hat, nu_hat, bias_hat, eta, tau, dt, M, D, L_1, L_2, L_3):
+def linear_ship_dynamics(eta_hat, nu_hat, bias_hat, eta, tau, dt):
     """
     Observer
     """
+    M = np.array([[16.11, 0.0, 0.0], [0.0, 24.11, 0.5291], [0.0, 0.5291, 2.7600]])
+    D = np.array([[0.66, 0., 0.], [0., 1.3, 2.8], [0., 0., 1.9]])
+    L_1 = np.diag([10.0, 10.0, 10.0])
+    L_2 = np.diag([50.0, 50.0, 50.0])
+    L_3 = np.diag([1.0, 1.0, 1.0])
     R = get_rotation_matrix(eta[2])
     M_inv = np.linalg.inv(M)
+
     eta_tilde = eta - eta_hat
     eta_hat_dot = R @ nu_hat + L_1 @ eta_tilde
 
@@ -40,7 +46,16 @@ def linear_ship_dynamics(eta_hat, nu_hat, bias_hat, eta, tau, dt, M, D, L_1, L_2
 ### End of student code ###
 
 def loop():
+    u = Udata.getU
+    tau = compute_tau(u)
+    dt = 0.01 
 
+    eta 
+    old_eta_hat
+    old_nu_hat
+    old_bias_hat
+
+    eta_hat, nu_hat, bias_hat = linear_ship_dynamics(old_eta_hat, old_nu_hat, old_bias_hat, eta, tau, dt, )
     
     print(Udata.getU())
 

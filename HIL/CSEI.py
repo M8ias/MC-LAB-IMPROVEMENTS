@@ -50,7 +50,7 @@ class CSEI:
         self.u = np.zeros(5)
         self.publishOdom() #Publishes the initial state to odometry
         self.publishTau() #Publishes the initial tau
-        self.dt
+        self.dt = 0.01
     ### Computation ###
         
     def set_D(self):
@@ -61,7 +61,7 @@ class CSEI:
         d22 = (-self._Y[0][0] - self._Y[0][1]*np.abs(v) - self._Y[0][2]*(v**2) - self._Y[2][0]*np.abs(r))[0]
         d33 = (-self._Z[1][0] - self._Z[1][1]*np.abs(r) - self._Z[1][2]*(r**2) - self._Z[2][1]*np.abs(v))[0]
         d23 = (-self._Y[1][0] - self._Y[1][1]*np.abs(r) - self._Y[1][2]*(r**2) - self._Y[2][1]*np.abs(v))[0]
-        d32 = (-self._Z[0][0] - self._Z[0][1]*np.abs(v) - self._Z[0][2]*(v**2) - self._Z[2][0]*np.abs(r))[0] #np.arrays are scuffed
+        d32 = (-self._Z[0][0] - self._Z[0][1]*np.abs(v) - self._Z[0][2]*(v**2) - self._Z[2][0]*np.abs(r))[0] # np.arrays are scuffed
         new_D = np.array([[d11, 0, 0], [0, d22, d23], [0, d32, d33]])
         self.D = new_D  # Designates the damping matrix
 
@@ -83,7 +83,7 @@ class CSEI:
         s1 = math.sin(alpha[0])
         s2 = math.sin(alpha[1])
         s3 = 1
-        B = np.array([[c1, c2, c3], [s1, s2, s3], [self._L[0][0]*s1 - self._L[1][0]*c1, self._L[0][1]*s1 - self._L[1][1]*c1, self._L[0][2]*s3 - self._L[1][2]*c3]])
+        B = np.array([[c3, c1, c2], [s3, s1, s2], [self._L[0][2]*s3 - self._L[1][2]*c3, self._L[0][0]*s1 - self._L[1][0]*c1, self._L[0][1]*s1 - self._L[1][1]*c1]])
         new_tau = np.dot(np.dot(self._K, B), u_t)
         self.tau = new_tau
 
@@ -149,8 +149,8 @@ class CSEI:
         self.set_D()  # Compute damping matrix
         self.set_tau(self.u) # Compute the force vector
         self.publishTau()   # Publish the tau, this is needed for the Observer :)
-        self.set_nu(0.01)   # Compute the velocity
-        self.set_eta(0.01)  # Compute the position
+        self.set_nu()   # Compute the velocity
+        self.set_eta()  # Compute the position
         self.publishOdom() # Publish the new position
 
 
