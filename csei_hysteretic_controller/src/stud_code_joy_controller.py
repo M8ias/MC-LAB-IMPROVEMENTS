@@ -62,20 +62,30 @@ stud_code_joy_controller.py is to contain all thrust allocation algorithms.
 # ]
 
 # Deafault and should always be here
+def saturate(u):
+    """
+    Saturate ensures that the input to the actuator remains bounded to the intervall [-1, 1]
+    """
+    if u > 1:
+        u = 1
+    else if u < -1:
+        u = -1
+    return u
+
 def sixaxis2thruster(lStickX, lStickY, rStickX, rStickY, R2, L2):
     """
     sixaxis2thruster()directly maps the sixaxis playstation controller inputs
     to the vessel actuators.
     """
     ### Acutator commands ###
-    u1 = (R2 - L2)
-    u2 = math.sqrt(lStickX ** 2  + lStickY ** 2)
-    u3 = math.sqrt(rStickX ** 2 + rStickY ** 2)
+    u1 = (L2 - R2)
+    u2 = saturate(math.sqrt(lStickX ** 2  + (-lStickY) ** 2))
+    u3 = saturate(math.sqrt(rStickX ** 2 + (-rStickY) ** 2))
 
 
     ### VSD angles ###
-    alpha1 = math.atan2(lStickY, lStickX)
-    alpha2 = math.atan2(rStickY, rStickX)
+    alpha1 = math.atan2(-lStickY, lStickX)
+    alpha2 = math.atan2(-rStickY, rStickX)
 
     u = np.array([u1, u2, u3, alpha1, alpha2])
     return u
