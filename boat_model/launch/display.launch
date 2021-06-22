@@ -1,0 +1,10 @@
+<launch>
+
+  <arg name="model" default="$(find boat_model)/urdf/01-myfirst.urdf"/>
+  <arg name="gui" default="true" />
+  <arg name="rvizconfig" default="$(find boat_model)/rviz/urdf.rviz"/>
+
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find boat_model)/rviz_config/Boat.rviz" required="true" />
+
+</launch>
