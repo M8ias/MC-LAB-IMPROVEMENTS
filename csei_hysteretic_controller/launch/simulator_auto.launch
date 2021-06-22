@@ -1,0 +1,6 @@
+<launch>
+    <node name="student_code_node" pkg="csei_hysteretic_controller" type="auto_controller.py" />
+    <node name="observer" pkg="csei_observer" type="looper.py"/>
+    <node name="simulator" pkg="simulator" type="CSEI.py"/>
+    <node name="tf_publisher" pkg="tf_test_pkg" type="node.py"/>
+</launch>
