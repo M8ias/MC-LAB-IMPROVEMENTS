@@ -49,3 +49,12 @@ def quat2eul(w, x, y, z):
     yaw = np.arctan2(R[1, 0], R[0, 0])
 
     return np.array([roll, pitch, yaw])
+
+
+def wrap2pi(psi):
+    pi = math.pi
+    if psi < -pi:
+        psi = -pi
+    elif psi > pi:
+        psi = pi
+    return psi

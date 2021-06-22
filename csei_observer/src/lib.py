@@ -1,19 +1,19 @@
 from math import tau
-from observer.observer.math_tools import quat2eul
+from Kinematics import quat2eul
 import rospy
 from std_msgs.msg import Float64MultiArray
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Vector3
-from message.msg import observer_message
+from messages.msg import observer_message
+import numpy as np
 
 class qualisys():
     def __init__(self):
-        self.qualisysOdometry = Odometry()
+        self.odom = Odometry()
         self.eta = np.zeros(3)
-        self.nu = np.zeros(3)
 
     def updateQualisysOdometry(self, data):
-        self.qualisysOdometry = data
+        self.odom = data
 
     def getQualisysOdometry(self):
         w = self.odom.pose.pose.orientation.w
@@ -44,21 +44,22 @@ class UVector():
 
 
 class Tau():
-    tau = [[0],[0],[0]]
+    def __init__(self):
+        self.tau = np.array([0, 0, 0])
 
     def updateTau(self, msg):
         self.tau = msg.data
     
-    def getTau(self)
+    def getTau(self):
         return self.tau
 
 class Observer():
     def __init__(self):
         self.observer_msg = observer_message()
-        self.pub = rospy.Publisher('CSEI/observer/odom', observer_message, queue_size=1)
-        self.eta_hat = np.zeros(3)
-        self.nu_hat = np.zeros(3)
-        self.bias_hat = np.zeros(3)
+        self.pub = rospy.Publisher('CSEI/observer/', observer_message, queue_size=1)
+        self.eta_hat = np.array([0, 0, 0])
+        self.nu_hat = np.array([0, 0, 0])
+        self.bias_hat = np.array([0, 0 ,0])
 
     def callback_observer(self, msg):
         self.eta_hat = msg.eta
@@ -85,11 +86,8 @@ def observerNodeInit():
     node = rospy.init_node('stud_odom_node')
     rospy.Subscriber("/qualisys/CSEI/odom", Odometry, qualisys.updateQualisysOdometry)
     rospy.Subscriber("CSEI/u", Float64MultiArray, Udata.updateU)
-    rospy.Subscriber("CSEI/tau", Float64MultiArray, queue_size=1)
-    rospy.Subscriber("CSEI/observer/eta", Vector3, queue_size=1)
-    rospy.Subscriber("CSEI/observer/nu", Vector3, queue_size=1)
-    rospy.Subscriber("CSEI/observer/bias", Vector3, queue_size=1)
-    rospy.Subscriber("CSEI/tau", Float64MultiArray, tau.returnTau)
+    rospy.Subscriber("CSEI/observer", observer_message, Observer.callback_observer)
+    rospy.Subscriber("CSEI/tau", Float64MultiArray, Tau.updateTau)
    
 
 def nodeEnd():

@@ -15,7 +15,7 @@ def linear_observer(eta_hat, nu_hat, bias_hat, eta, tau):
     L_1 = np.diag([10.0, 10.0, 10.0])
     L_2 = np.diag([50.0, 50.0, 50.0])
     L_3 = np.diag([1.0, 1.0, 1.0])
-    R = get_rotation_matrix(eta[2])
+    R = Rzyx(eta[2])
     M_inv = np.linalg.inv(M)
     dt = 0.01
 
@@ -37,8 +37,8 @@ def linear_observer(eta_hat, nu_hat, bias_hat, eta, tau):
 def loop():
     
     tau = Tau.getTau
-    eta = qualisys.getQualisysOdometry
-    old_eta_hat, old_nu_hat, old_bias_hat = Observer.get_observer_data
+    eta = qualisys.getQualisysOdometry()
+    old_eta_hat, old_nu_hat, old_bias_hat = Observer.get_observer_data()
     eta_hat, nu_hat, bias_hat = linear_observer(old_eta_hat, old_nu_hat, old_bias_hat, eta, tau)
     Observer.publish_observer_data(eta_hat, nu_hat, bias_hat)
     return 0
