@@ -1,24 +1,12 @@
 import rospy
 import numpy as np
 import math
-from lib import qualisys, Udata
-### Student code ###
-def compute_tau(u):
-        u_t = np.transpose(np.take(u, [0, 1, 2])[np.newaxis])
-        alpha = np.take(u, [3, 4])
-        c1 = math.cos(alpha[0])
-        c2 = math.cos(alpha[1])
-        c3 = 0
-        s1 = math.sin(alpha[0])
-        s2 = math.sin(alpha[1])
-        s3 = 1
-        L = np.array([[-0.4574, -0.4574, 0.3875], [-0.055, 0.055, 0]]) 
-        K = np.diag(np.diag([1.03, 1.03, 2.629]))
-        B = np.array([[c1, c2, c3], [s1, s2, s3], [L[0][0]*s1 - L[1][0]*c1, L[0][1]*s1 - L[1][1]*c1, L[0][2]*s3 - L[1][2]*c3]])
-        tau = (K @ B) @ u_t)
-        return tau
+from lib import qualisys, Tau, Observer
 
-def linear_ship_dynamics(eta_hat, nu_hat, bias_hat, eta, tau, dt):
+
+### Student code ###
+
+def linear_observer(eta_hat, nu_hat, bias_hat, eta, tau):
     """
     Observer
     """
@@ -29,6 +17,7 @@ def linear_ship_dynamics(eta_hat, nu_hat, bias_hat, eta, tau, dt):
     L_3 = np.diag([1.0, 1.0, 1.0])
     R = get_rotation_matrix(eta[2])
     M_inv = np.linalg.inv(M)
+    dt = 0.01
 
     eta_tilde = eta - eta_hat
     eta_hat_dot = R @ nu_hat + L_1 @ eta_tilde
@@ -46,17 +35,10 @@ def linear_ship_dynamics(eta_hat, nu_hat, bias_hat, eta, tau, dt):
 ### End of student code ###
 
 def loop():
-    u = Udata.getU
-    tau = compute_tau(u)
-    dt = 0.01 
-
-    eta 
-    old_eta_hat
-    old_nu_hat
-    old_bias_hat
-
-    eta_hat, nu_hat, bias_hat = linear_ship_dynamics(old_eta_hat, old_nu_hat, old_bias_hat, eta, tau, dt, )
     
-    print(Udata.getU())
-
+    tau = Tau.getTau
+    eta = qualisys.getQualisysOdometry
+    old_eta_hat, old_nu_hat, old_bias_hat = Observer.get_observer_data
+    eta_hat, nu_hat, bias_hat = linear_observer(old_eta_hat, old_nu_hat, old_bias_hat, eta, tau)
+    Observer.publish_observer_data(eta_hat, nu_hat, bias_hat)
     return 0

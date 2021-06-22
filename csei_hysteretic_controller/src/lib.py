@@ -53,7 +53,7 @@ class UVector():
         self.message.data = data
         self.pub.publish(self.message)
 
-
+    
 
 def updateObserverOdometry(data):
     global odometry
