@@ -4,7 +4,7 @@ from Kinematics import yaw2quat
 import numpy as np
 import rospy
 
-from Kinematics import yaw2quat, Rzyx
+from Kinematics import yaw2quat, Rzyx, wrap2pi
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64MultiArray
 
@@ -95,7 +95,8 @@ class CSEI:
         R = Rzyx(psi)
         self.eta_dot = np.dot(R, self.nu)
         self.eta = self.eta + self.dt*self.eta_dot
-
+        self.eta[2] = wrap2pi(self.eta[2])
+        
     def set_nu(self):
         M_inv = np.linalg.inv(self._M)
         b = self.tau - np.dot((self.C + self.D), self.nu)
