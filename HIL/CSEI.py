@@ -17,16 +17,10 @@ class CSEI:
     """
     ### Main data of the C/S Enterprise. Do not touch ###
     _M = np.array([[16.11, 0.0, 0.0], [0.0, 24.11, 0.5291], [0.0, 0.5291, 2.7600]])  # Inertia matrix
-    _X = np.array([[-0.655, 0.3545, -3.787], 
-                    [0.0, -2.443, 0.0], 
-                    [0.0, 0.0, 0.0]])  # Damping coefficients in surge
-    _Y = np.array([[-1.33, -2.776, -64.91], 
-                    [-2.8, -3.450, 0], 
-                    [-0.805, -0.845, 0]])  # Damping coeffcients in sway
-    _Z = np.array([[0, -0.2088, 0], 
-                   [-1.90, -0.75, 0], 
-                   [0.130, 0.080, 0]])  # Damping coeffcients in yaw
-    _A = np.array([[-2.0, 0.0, 0.0], [0.0, -10.0, 0.0], [0.0, 0.0, -1.0]])  # Added mass matrix
+    _X = np.array([-0.6555, 0.3545, -3.787, 0.0, -2.443, 0.0]) # Hydro surge [Xu, Xuu, Xuuu, Xv, Xvv, Xvvv]
+    _Y = np.array([-1.33, -2.776, -65.91, -7.25, -3.45, 0.0, -0.805, -0.845]) # Hydro sway [Yv, Yvv, Yvvv, Yr, Yrr, Yrrr, Yrv, Yvr]
+    _N = np.array([0.0, -0.2088, 0.0, -1.9, -0.75, 0.0, 0.130, 0.080]) # Hydro yaw [Nv, Nvv, Nvvv, Nr, Nrr, Nrrr, Nrv, Nvr]
+    _A = np.array([-2, -10, -0, -1]) # Added mass [Xu, Yv, Yr, Nr]
     _m = 14.11  # Rigid body mass
     _Iz = 1.7600  # Inertial moment
     _xg = 0.0375  # Center of gravity
@@ -34,10 +28,11 @@ class CSEI:
     lx1 = 0.3875
     lx2 = -0.4574
     lx3 = -0.4574
-    ly1 = -0.055
-    ly2 = 0.055
-    ly3 = 0
-    _K = np.diag(np.diag([2.629, 1.03, 1.03]))  # K-matrix
+    ly1 = 0
+    ly2 = -0.055
+    ly3 = 0.055
+    
+    _K = np.diag([2.629, 1.03, 1.03])  # K-matrix
 
     ### Initialization ###
 
@@ -50,6 +45,7 @@ class CSEI:
         self.nu_dot = np.array([[0], [0], [0]])
         self.eta_dot = np.array([[0], [0], [0]])
         self.odom = Odometry() #Msg to be published
+        self.odom.header.frame_id = "odom"
         self.tauMsg = Float64MultiArray()
         self.pubOdom = rospy.Publisher('/qualisys/CSEI/odom', Odometry, queue_size=1)
         self.pubTau = rospy.Publisher('/CSEI/tau', Float64MultiArray, queue_size=1)
@@ -64,11 +60,11 @@ class CSEI:
         u = self.nu[0]
         v = self.nu[1]
         r = self.nu[2]
-        d11 = (-self._X[0][0] - self._X[0][1]*np.abs(u) - self._X[0][2]*(u**2))[0]
-        d22 = (-self._Y[0][0] - self._Y[0][1]*np.abs(v) - self._Y[0][2]*(v**2) - self._Y[2][0]*np.abs(r))[0]
-        d33 = (-self._Z[1][0] - self._Z[1][1]*np.abs(r) - self._Z[1][2]*(r**2) - self._Z[2][1]*np.abs(v))[0]
-        d23 = (-self._Y[1][0] - self._Y[1][1]*np.abs(r) - self._Y[1][2]*(r**2) - self._Y[2][1]*np.abs(v))[0]
-        d32 = (-self._Z[0][0] - self._Z[0][1]*np.abs(v) - self._Z[0][2]*(v**2) - self._Z[2][0]*np.abs(r))[0] # np.arrays are scuffed
+        d11 = -self._X[0] - self._X[1]*np.abs(u) - self._X[2]*(u**2)
+        d22 = -self._Y[0] - self._Y[1]*np.abs(v) - self._Y[2]*(v**2)
+        d33 = -self._N[3] - self._N[7]*np.abs(v) - self._N[5]*(r**2)
+        d23 = -self._Y[3] - self._Y[7]*np.abs(v) - self._Y[4]*np.abs(r) - self._Y[5]*(r**2)
+        d32 = -self._N[0] - self._N[2]*np.abs(v) - self._N[3]*(v**2) - self._N[6]*np.abs(r)
         new_D = np.array([[d11, 0, 0], [0, d22, d23], [0, d32, d33]])
         self.D = new_D  # Designates the damping matrix
 
@@ -76,33 +72,34 @@ class CSEI:
         u = self.nu[0]
         v = self.nu[1]
         r = self.nu[2]
-        c13 = (-(self._m - self._A[1][1])*v - (self._m*self._xg - self._A[2][1])*r)[0]
-        c23 = ((self._m - self._A[0][0])*u)[0]
+        c13 = (-self._m*self._xg + A[2])*r + (-self._m + A[1])*v
+        c23 = (self._m - A[0])*u
         new_C = np.array([[0, 0, c13], [0, 0, c23], [-c13, -c23, 0]])
         self.C = new_C
 
     def set_tau(self, u):
         u_t = np.transpose(np.take(u, [0, 1, 2])[np.newaxis])
         alpha = np.take(u, [3, 4])
+        c1 = 0
         c2 = math.cos(alpha[0])
         c3 = math.cos(alpha[1])
-        c1 = 0
+        s1 = 1
         s2 = math.sin(alpha[0])
         s3 = math.sin(alpha[1])
-        s1 = 1
-        B = np.array([[c1, c2, c3], [s1, s2, s3], [self.lx1*s1-self.ly1*c1, self.lx2*s2 - self.ly2*c2, self.lx3*s3-self.ly3*s3]])
-        new_tau = (self._K @ B) @ u_t
+        B = np.array([[c1, c2, c3], [s1, s2, s3], [self.lx1*s1-self.ly1*c1, self.lx2*s2 - self.ly2*c2, self.lx3*s3-self.ly3*c3]])
+        new_tau = (B @ self._K) @ u_t
         self.tau = new_tau
 
     def set_eta(self):
         psi = self.eta[2]
         R = Rzyx(psi)
-        self._eta_dot = np.dot(R, self.nu)
-        self.eta = self.eta + self.dt*self._eta_dot
+        self.eta_dot = np.dot(R, self.nu)
+        self.eta = self.eta + self.dt*self.eta_dot
 
     def set_nu(self):
+        M_inv = np.linalg.inv(self._M)
         b = self.tau - np.dot((self.C + self.D), self.nu)
-        self.nu_dot = np.linalg.lstsq(self._M, b)
+        self.nu_dot = M_inv @ b
         self.nu = self.nu + self.dt*self.nu_dot  # Integration, forward euler
 
     def get_tau(self):

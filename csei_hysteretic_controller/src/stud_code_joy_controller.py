@@ -78,14 +78,14 @@ def sixaxis2thruster(lStickX, lStickY, rStickX, rStickY, R2, L2):
     to the vessel actuators.
     """
     ### Acutator commands ###
-    u1 = (L2 - R2)
-    u2 = saturate(math.sqrt(lStickX ** 2  + (-lStickY) ** 2))
-    u3 = saturate(math.sqrt(rStickX ** 2 + (-rStickY) ** 2))
+    u1 = -0.5*(L2 - R2)
+    u2 = saturate(math.sqrt(lStickX ** 2  + lStickY ** 2))
+    u3 = saturate(math.sqrt(rStickX ** 2 + rStickY ** 2))
 
 
-    ### VSD angles ###
-    alpha1 = math.atan2(-lStickY, lStickX)
-    alpha2 = math.atan2(-rStickY, rStickX)
+    ### VSD angles as described in the handbook ###
+    alpha1 = math.atan2(lStickX, lStickY)
+    alpha2 = math.atan2(rStickX, rStickY)
 
     u = np.array([u1, u2, u3, alpha1, alpha2])
     return u
@@ -99,7 +99,7 @@ def input_mapping(lStickX, lStickY, rStickX, rStickY, R2, L2):
     """
     surge = (lStickY + rStickY)
     sway = (lStickX + rStickX)
-    yaw = 0.5*(R2 + L2)
+    yaw = (R2 - L2)
 
     tau = np.array([[surge], [sway], [yaw]])
     return tau
