@@ -10,11 +10,8 @@ from std_msgs.msg import Float64MultiArray
 
 # The C/S enterprise I object
 class CSEI:
-    """
-    The CSEI object represents the C/S Enterprise and contains the necessary
-    kinematics and dynamics of the ship, as well as the operations required to
-    "move" the ship over one time-step
-    """
+    
+    
     ### Main data of the C/S Enterprise. Do not touch ###
     _M = np.array([[16.11, 0.0, 0.0], [0.0, 24.11, 0.5291], [0.0, 0.5291, 2.7600]])  # Inertia matrix
     _X = np.array([-0.6555, 0.3545, -3.787, 0.0, -2.443, 0.0]) # Hydro surge [Xu, Xuu, Xuuu, Xv, Xvv, Xvvv]

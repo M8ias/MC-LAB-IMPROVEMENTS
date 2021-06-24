@@ -115,7 +115,7 @@ def extended_thrust_allocation(tau):
     u = np.zeros(5)
 
     B_ext = np.array([[0, 1, 0, 1, 0], [1, 0, 1, 0, 1], [lx[2], -ly[0], lx[0], -ly[1], lx[1]]])
-    K =np.array([
+    K =np.array([cd
         [2.629, 0, 0, 0, 0],
         [0, 1.030, 0, 0, 0],
         [0, 0, 1.030, 0, 0],
