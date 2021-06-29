@@ -1,74 +1,21 @@
+#!/usr/bin/env python3
+
 import rospy
-from lib import odometry, ps4, Udata
+from lib import observer, ps4, Udata
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64MultiArray
 import math
 import numpy as np
 
-"""
-stud_code_joy_controller.py is to contain all thrust allocation algorithms. 
-"""
-
-# all buttons = 1 while pressed and 0 while not pressed
-# ps4.x -- for x button
-# ps4.square -- for square button
-# ps4.circle -- for circle button
-# ps4.triangle -- for triangle button
-# ps4.rightArrow -- for right arrow button
-# ps4.leftArrow  -- for left arrow button 
-# ps4.upArrow -- for up arrow button
-# ps4.DownArrow  -- for down arrow button
-# ps4.L1 -- for left top trigger
-# ps4.R1 -- for right top trigger
-# ps4.L2 -- for left bottom trigger
-# ps4.R2 -- for right bottom trigger
-# ps4.L3 -- for left joystick press
-# ps4.R3 -- for right joystick press
-# ps4.options -- for options button
-# ps4.share -- for share button
-# ps4.PS -- for ps button
-# ps4.pad -- for pad pressed
-
-# stick values are mapped from -1.0 to 1.0, trigger values are mapped from 0.0 to 1.0
-# ps4.lStickX -- left stick right to left value, right is negative left is positive
-# ps4.lStickY -- left stick up down value, up is positive down is negative
-# ps4.rStickX -- right stick right to left value, right is negative left is positive
-# ps4.rStickY -- right stick up down value, up is positive down is negative
-# ps4.L2A -- left trigger analog value
-# ps4.R2A -- right trigger analog value
 
 
-# odometry.pose.pose.orientation.x
-# odometry.pose.pose.orientation.y
-# odometry.pose.pose.orientation.z
-# odometry.pose.pose.orientation.w
-# odometry.pose.pose.position.x
-# odometry.pose.pose.position.y
-# odometry.pose.pose.position.z
-# odometry.twist.twist.angular.x
-# odometry.twist.twist.angular.y
-# odometry.twist.twist.angular.z
-# odometry.twist.twist.linear.x
-# odometry.twist.twist.linear.y
-# odometry.twist.twist.linear.z
-
-# Udata.publish(data) where data is a 5 elements long vector containing five floats, publishes your controll vector to ROS.
-# [
-# leftRotorThrust,
-# rightRotorThrust,
-# bowRotorThrust,
-# leftRotorAngle,
-# rightRotorAngle
-# ]
-
-# Deafault and should always be here
 def saturate(u):
     """
     Saturate ensures that the input to the actuator remains bounded to the interval [-1, 1]
     """
     if u > 1:
         u = 1
-    else if u < -1:
+    elif u < -1:
         u = -1
     return u
 
@@ -115,7 +62,7 @@ def extended_thrust_allocation(tau):
     u = np.zeros(5)
 
     B_ext = np.array([[0, 1, 0, 1, 0], [1, 0, 1, 0, 1], [lx[2], -ly[0], lx[0], -ly[1], lx[1]]])
-    K =np.array([cd
+    K =np.array([
         [2.629, 0, 0, 0, 0],
         [0, 1.030, 0, 0, 0],
         [0, 0, 1.030, 0, 0],
@@ -134,6 +81,6 @@ def extended_thrust_allocation(tau):
 
 def loop():
     # Call your thrust allocation algorithm here. 
-    tau = input_mapping(ps4.lStickX, ps4.lStickY, ps4.rStickX, ps4.rStickY, ps4.R2, ps4.L2)
-    u = extended_thrust_allocation(tau)
+    #tau = input_mapping(ps4.lStickX, ps4.lStickY, ps4.rStickX, ps4.rStickY, ps4.R2, ps4.L2)
+    u = sixaxis2thruster(ps4.lStickX, ps4.lStickY, ps4.rStickX, ps4.rStickY, ps4.R2, ps4.L2)
     Udata.publish(u)
