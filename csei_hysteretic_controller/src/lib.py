@@ -31,10 +31,10 @@ class controller():
         self.PS = data.buttons[10]
         self.pad = data.buttons[11]
 
-        self.lStickX = data.axes[0]
-        self.lStickY = data.axes[1]
-        self.rStickX = data.axes[2]
-        self.rStickY = data.axes[3]
+        self.lStickX = -data.axes[1]
+        self.lStickY = data.axes[0]
+        self.rStickX = -data.axes[3]
+        self.rStickY = data.axes[2]
         self.L2A = data.axes[4]
         self.R2A = data.axes[5]
     
@@ -53,7 +53,7 @@ class UVector():
         self.message.data = data
         self.pub.publish(self.message)
 
-
+    
 
 def updateObserverOdometry(data):
     global odometry

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<robot name="myfirst">
+    <link name="base_link">
+        <visual>
+            <geometry>
+                <mesh scale="0.03 0.03 0.03"
+filename="package://boat_model/meshes/3DBenchy.stl"/>
+            </geometry>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <material name="black_metal">
+                <color rgba="0.3 0.3 0.3 1"/>
+            </material>
+        </visual>
+    </link>
+</robot>
