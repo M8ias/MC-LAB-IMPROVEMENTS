@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import rospy
-from stud_code_controll import loop
+from stud_code_auto_controller import loop
 from lib import controllNodeInit, nodeEnd
 import yaml
 import os
