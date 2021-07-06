@@ -17,7 +17,7 @@ The next two bytes contain the temprature data as a signle word.
 3. float temp;
     - A float containg the temprature measured by the imu.
 
-## Functions
+## Methods
 1. int openPort(const std::string device)
     - The device on raspberry pi is typically "/dev/i2c-1" but might change to "/dev/i2c-2" or "/dev/i2c-0" depending on what devices are connected and what happens when the i2c module is connected.
     -returns -1 if failed. nothing otherwise.

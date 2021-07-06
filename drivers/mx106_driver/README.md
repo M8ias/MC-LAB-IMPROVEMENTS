@@ -2,7 +2,7 @@
 This is a ros driver for the dynamixel mx-106 servo.
 This driver relies on the dynamixel_sdk rospackage to run and is made to interface better with the raspberry pi and the mx-106 servo. than the dynamixel_sdk package.
 
-# Functions
+# Methods
 1. initServos(int Ids[], int numberOfServos);
     - This initialises servos.
     - The Ids var contains an array of all the different Ids of the servos you want initialised and the numberOfServos var contains the number of servos in the Ids array.
