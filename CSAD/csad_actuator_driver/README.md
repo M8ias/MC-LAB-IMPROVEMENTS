@@ -1,7 +1,7 @@
 # C/S Arctic Drillship
 Contains ROS packages for the CSAD.
 
-To use this library copy all folders (csad_actuator_driver, dynamixel_sdk, mx106_driver and pca9685_driver) into the source folder of a catkin workspace. run catkin_make in the workspace to build the packages.
+To use this library copy folders: csad_actuator_driver, dynamixel_sdk into the source folder of a catkin workspace. run catkin_make in the workspace to build the packages.
 ```
 catkin_make
 ```
@@ -28,7 +28,7 @@ All functions are part of the CSAD_Actuator class. an example of how to call a f
 
     float servo1Pos = ship.getServoPresentPosition(2);
 
-## Functions
+## Methods
 1. float getServoPresentPosition(uint8_t servoNumber);
     - This return the current servo positions of the servo with the number given in the sevoNumber variable.
 2. void getAllServoPresentPositions(double positions[]);
