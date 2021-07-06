@@ -58,6 +58,7 @@ using namespace dynamixel;
 
 PortHandler * portHandler;
 PacketHandler * packetHandler;
+int numberOfServos;
 
 /**
  * @brief Constructor
@@ -101,7 +102,7 @@ void Mx106::getPresentPositions(uint8_t ids[], int16_t positions[])
 
   // Read Present Position (length : 4 bytes) and Convert uint32 -> int32
   // When reading 2 byte data from AX / MX(1.0), use read2ByteTxRx() instead.
-  for (int i = 0; i < (sizeof(ids) - 1); i++)
+  for (int i = 0; i < numberOfServos; i++)
   {
     dxl_comm_result = packetHandler->read2ByteTxRx(
       portHandler, ids[i], ADDR_PRESENT_POSITION, (uint16_t *)&position, &dxl_error);
@@ -153,7 +154,7 @@ void Mx106::setPositions(int16_t positions[], uint8_t ids[])
 
   // Write Goal Position (length : 4 bytes)
   // When writing 2 byte data to AX / MX(1.0), use write2ByteTxRx() instead.
-  for (int i = 0; i < (sizeof(ids) - 1); i++)
+  for (int i = 0; i < numberOfServos; i++)
   {
     dxl_comm_result = packetHandler->write2ByteTxRx(
       portHandler, ids[i], ADDR_GOAL_POSITION, positions[i], &dxl_error);
@@ -171,9 +172,10 @@ void Mx106::setPositions(int16_t positions[], uint8_t ids[])
  * @retval 0 Success
  * @retval -1 Failure
  */
-int Mx106::initServos(uint8_t ids[]){  
+int Mx106::initServos(uint8_t ids[], int Servos){  
   uint8_t dxl_error = 0;
   int dxl_comm_result = COMM_TX_FAIL;
+  numberOfServos = Servos;
 
   portHandler = PortHandler::getPortHandler(DEVICE_NAME);
   packetHandler = PacketHandler::getPacketHandler(PROTOCOL_VERSION);
@@ -188,7 +190,7 @@ int Mx106::initServos(uint8_t ids[]){
     return -1;
   }
 
-  for (int i = 0; i < (sizeof(ids) - 1); i++)
+  for (int i = 0; i < (numberOfServos); i++)
   {
     dxl_comm_result = packetHandler->write1ByteTxRx(
       portHandler, ids[i], ADDR_TORQUE_ENABLE, 1, &dxl_error);

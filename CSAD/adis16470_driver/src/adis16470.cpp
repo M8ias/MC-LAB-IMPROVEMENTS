@@ -67,6 +67,5 @@ int Adis16470::update()
     accl[1] = 0.00125 * float(int16_t((dataBuffer[10] << 8) | dataBuffer[11]));
     accl[2] = 0.00125 * float(int16_t((dataBuffer[12] << 8) | dataBuffer[13]));
     temp = 0.1 * float(int16_t((dataBuffer[13] << 8) | dataBuffer[14]));
-
   return 0;
 }

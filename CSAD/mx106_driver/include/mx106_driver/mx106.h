@@ -11,7 +11,7 @@ class Mx106
 public:
 
     Mx106();
-    int initServos(uint8_t ids[]);
+    int initServos(uint8_t ids[], int numberOfServos);
     int16_t getPresentPosition(uint8_t id);
     void getPresentPositions(uint8_t id[], int16_t positions[]);
     void setPosition(int16_t position, uint8_t id);
