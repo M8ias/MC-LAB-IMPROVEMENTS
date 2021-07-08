@@ -4,7 +4,7 @@
     <link name="odom">
         <visual>
             <geometry>
-                <mesh scale="0.03 0.03 0.03"
+                <mesh scale="0.1 0.1 0.1"
 filename="package://boat_model/meshes/water.stl"/>
             </geometry>
             <origin rpy="1.5708 0 0" xyz="0 0 0"/>
