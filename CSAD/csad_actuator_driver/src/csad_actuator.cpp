@@ -21,11 +21,11 @@ using namespace dynamixel;
 
 
 double servoSignalToRad(int servoSignal, double offset){
-return (servoSignal * 2.0 * PI / (double)SERVO_RESOLUTION) - offset;
+return (-servoSignal * 2.0 * PI / (double)SERVO_RESOLUTION) - offset;
 }
 
 int radToServoSignal(double rad, double offset){
-  return ((rad + offset )* (double)SERVO_RESOLUTION / (2.0 * PI) + 0.5);
+  return (-((rad + offset )* (double)SERVO_RESOLUTION / (2.0 * PI) + 0.5));
 }
 
 
