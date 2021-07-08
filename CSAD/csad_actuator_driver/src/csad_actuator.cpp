@@ -110,82 +110,6 @@ CSAD_Actuator::CSAD_Actuator()
   setPWMFreq(PWM_FREQ);
 }
 
-/*
-/**
- * @brief initializes all dynamixel mx106 servos
- * @retval 0 Success
- * @retval -1 Failure
-
-int CSAD_Actuator::initCSAD(){
-  uint8_t dxl_error = 0;
-  int dxl_comm_result = COMM_TX_FAIL;
-  sdt::string i2c_device_path;
-
-  portHandler = PortHandler::getPortHandler(DEVICE_NAME); // opens the file name for communication through usb
-  packetHandler = PacketHandler::getPacketHandler(SERVO_PROTOCOL_VERSION); // sets the comunication protocoll version of the Servos
-
-  // opens the alternate file incase the first one does not work
-  if (!portHandler->openPort()) {
-    portHandler = PortHandler::getPortHandler(ALTERNATE_DEVICE_NAME);  
-    if (!portHandler->openPort()){
-      ROS_ERROR("Failed to open the port!");
-      return -1;
-    }
-  }
-
-  // sets communication baud rate between the servos and the U2D2 dongle
-  if (!portHandler->setBaudRate(SERVOBAUDRATE)) { 
-    ROS_ERROR("Failed to set the baudrate!");
-    return -1;
-  }
-
-  for (int i = 0; i < NUMBER_OF_SERVOS; i++)
-  {
-    // enables torque for each servo
-    dxl_comm_result = packetHandler->write1ByteTxRx(  
-      portHandler, servoIds[i], SERVO_ADDR_TORQUE_ENABLE, 1, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS) {
-      ROS_ERROR("Failed to enable torque for Dynamixel ID %d", servoIds[i]);
-      return -1;
-    }
-    // sets the servos in multirotor mode
-    dxl_comm_result = packetHandler->write1ByteTxRx( 
-      portHandler, servoIds[i], SERVO_ADDR_CW_ANGLE_LIMIT, 4095, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS) {
-      ROS_ERROR("Failed to set clockwise limit for Dynamixel ID %d", servoIds[i]);
-      return -1;
-    }else {
-      ROS_INFO("successfully set clockwise limit for Dynamixel ID %d", servoIds[i]);
-    }
-    dxl_comm_result = packetHandler->write1ByteTxRx(
-      portHandler, servoIds[i], SERVO_ADDR_CCW_ANGLE_LIMIT, 4095, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS) {
-      ROS_ERROR("Failed to set counterclockwise limit for Dynamixel ID %d", servoIds[i]);
-      return -1;
-    }else {
-      ROS_INFO("successfully set counterclockwise limit for Dynamixel ID %d", servoIds[i]);
-    }
-  }
-  //opens the PCA9685 module
-  for (i = 0; i < 6; i++){
-    i2c_device_path = I2C_DEVICE + std::to_string(i);
-    fd_ = open(i2c_device_path, O_RDWR);
-    if (fd_ < 0)
-    {
-      perror("openPort");
-      return -1;
-    }
-    else{
-      ROS_INFO("I2C port opened on: " + i2c_device_path);
-      break
-    }
-  }
-  ioctl(fd_,I2C_SLAVE, PCA_I2C_ADDRESS);
-
-  setPWMFreq(PWM_FREQ);
-}
-*/
-
 
 /**
  * @brief get current Position of specific servo
@@ -274,30 +198,6 @@ void CSAD_Actuator::setAllServoPositions(double positions[])
   }
 }
 
-
-/*
-/**
- * @brief Open device
- * @param device Device file name (/dev/i2c-1)
- * @param freq PWM frequency
- * @retval 0 Success
- * @retval -1 Failure
- 
-int CSAD_Actuator::Init(const std::string device)
-{
-  fd_ = open(device.c_str(), O_RDWR);
-  if (fd_ < 0)
-  {
-    perror("openPort");
-    return -1;
-  }
-  ioctl(fd_,I2C_SLAVE, 0x40);
-
-  setPWMFreq(PWM_FREQ);
-
-  return 0;
-}
-*/
 
 
 /**
