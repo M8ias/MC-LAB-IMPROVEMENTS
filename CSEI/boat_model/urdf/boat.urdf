@@ -4,7 +4,7 @@
         <visual>
             <geometry>
                 <mesh scale="0.018 0.018 0.018"
-filename="package://boat_model/meshes/3DBenchy.stl"/>
+filename="package://boat_model/meshes/lowpolyship.stl"/>
             </geometry>
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <material name="black_metal">
