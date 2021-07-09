@@ -1,11 +1,11 @@
 import rospy
 import numpy as np
 import math
-from lib import qualisys, Tau, observer_data, Gains, Udata
+from lib import qualisys, Tau, observer, Gains, Udata
 from math_tools import Rzyx
 
 
-### Student code ###
+### Write your code here ###
 def computeTau(u):
     lx = np.array([-0.4574, -0.4574, 0.3875])
     ly = np.array([-0.055, 0.055, 0])
@@ -45,7 +45,7 @@ def linear_observer(eta_hat, nu_hat, bias_hat, eta, tau, L1, L2, L3):
                         bias_hat + tau + R.T @ L_2 @ eta_tilde)
     bias_hat_dot = L_3 @ eta_tilde
 
-    #Euler integration
+    # Forward euler
     eta_hat = eta_hat + dt * eta_hat_dot
     nu_hat  = nu_hat + dt * nu_hat_dot
     bias_hat = bias_hat + dt * bias_hat_dot
@@ -55,6 +55,10 @@ def linear_observer(eta_hat, nu_hat, bias_hat, eta, tau, L1, L2, L3):
 ### End of student code ###
 
 def loop():
+    """
+    Handle all calls to self written functions and publishers in this function. It is called by the 
+    script that creates the ROS node and will loop
+    """
     u = Udata.getU()
     tau = computeTau(u)
     new_tau = np.zeros(3)

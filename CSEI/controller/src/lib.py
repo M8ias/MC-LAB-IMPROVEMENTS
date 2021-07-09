@@ -9,6 +9,9 @@ from messages.msg import observer_message, reference_message
 
 
 class controller():
+    """
+    The controller listens to the /joy topic and maps all input signals from the DS4 to a variable that can be called
+    """
     def __init__(self):
         self.x = self.square = self.circle = self.triangle = self.rightArrow = self.leftArrow = self.upArrow = self.DownArrow = self.L1 = self.R1 = self.L2 = self.R2 = self.L3 = self.R3 = self.share = self.options = self.PS = self.pad = 0
         self.lStickX = self.lStickY = self.rStickX = self.rStickY = self.L2A = self.R2A = 0.0
@@ -41,6 +44,9 @@ class controller():
         self.R2A = data.axes[5]
     
 class UVector():
+    """
+    The UVector initializing and publishing the computed actuator commands
+    """
     def __init__(self):
         #self.leftRotorThrust = 0.0
         #self.rightRotorThrust = 0.0
@@ -61,23 +67,28 @@ class Observer_Listener():
     """
     The Observer_Listener object listens to the CSEI/observer topic. 
     """
-
+    # Initialize position in [0; 0; 0]
     def __init__(self):
         self.observer_msg = observer_message()
         self.eta_hat = np.array([0, 0, 0])[np.newaxis].T
         self.nu_hat = np.array([0, 0, 0])[np.newaxis].T
         self.bias_hat = np.array([0, 0, 0])[np.newaxis].T
 
-    def callback_observer(self, msg): 
+    # Callback function is called when the topic is updated
+    def callback(self, msg): 
         self.eta_hat = np.array(msg.eta)[np.newaxis].T
         self.nu_hat = np.array(msg.nu)[np.newaxis].T
         self.bias_hat = np.array(msg.bias)[np.newaxis].T
 
-    def get_data(self):
+    # Fetches data of observer. Dimensions are 3x1 of vectors
+    def get_observer_data(self):
         return self.eta_hat, self.nu_hat, self.bias_hat
 
-class Reference_Listener():
-    
+class Reference_Converser():
+    """
+    The reference converser listens and publishes to the CSEI/reference topic
+    """
+    # Initialize the guidance parameters in [0; 0; 0]
     def __init__(self):
         self.ref_msg = reference_message()
         self.pub = rospy.Publisher('/CSEI/reference/', reference_message, queue_size=1)
@@ -85,21 +96,28 @@ class Reference_Listener():
         self.nu_d = np.array([0, 0, 0])[np.newaxis].T
         self.nu_d_dot = np.array([0, 0, 0])[np.newaxis].T
 
-    def callback_ref(self, msg):
+    # Callback function is called when the topic is updated
+    def callback(self, msg):
         self.eta_d = np.array(msg.eta_d)[np.newaxis].T
         self.nu_d = np.array(msg.nu_d)[np.newaxis].T
         self.nu_d_dot = np.array(msg.nu_d_dot)[np.newaxis].T
 
-    def publish_ref(self, eta_d, nu_d, nu_dot_d):
+    # Publishes new gains to the reference topic. These should be numpy arrays with n=3
+    def publish(self, eta_d, nu_d, nu_dot_d):
         self.ref_msg.eta_d = eta_d
         self.ref_msg.nu_d = nu_d
         self.ref_msg.nu_d_dot = nu_dot_d
         self.pub.publish(self.ref_msg)
 
+    # Retrieve the references from the object 
     def get_ref(self):
         return self.eta_d, self.nu_d, self.nu_d_dot
     
 class Controller_Gains():
+    """
+    Controller gains retrieves the parameters from the dynamic_reconfigure server.
+    """
+    # Initialize all gains to zero
     def __init__(self):
         self.Kp = np.zeros(3)
         self.Kd = np.zeros(3)
@@ -107,9 +125,11 @@ class Controller_Gains():
         self.mu = 0
         self.Uref = 0
 
+    # Retrieves the gaines 
     def get_data(self):
         return self.Kp, self.Kd, self.Ki, self.mu, self.Uref
 
+    # Updates gains everytime the parameters are tuned
     def callback(self, config):
         self.Kp = self.string2array(config.Kp)
         self.Kd = self.string2array(config.Kd)
@@ -117,27 +137,32 @@ class Controller_Gains():
         self.mu = config.mu
         self.Uref = config.U_ref
 
-    
+    # dynamic_reconfigure does not handle arrays, so gains like L1 or KP are strings on the form "x11,x12,x13"
+    # the server to limit the number of variables. This function converts 
+    # the string into a numpy array when they are retrieved. Very scuffed :^)
+
     def string2array(self, string): 
-        return np.array(list(map(float, string.split(',')))) #Suuuuuuuuuuper scuffed
+        return np.array(list(map(float, string.split(',')))) # Not proud of this one
 
-
+# Build the objects to be imported
 ps4 = controller()
 Udata = UVector()
 odometry = Odometry()
 observer = Observer_Listener()
 Gains = Controller_Gains()
-reference = Reference_Listener()
+reference = Reference_Converser()
 
+
+# Initialize controller node
 def controllNodeInit():
     global node
-    node = rospy.init_node('stud_controll_node')
+    node = rospy.init_node('controll_node')
     rospy.Subscriber("joy", Joy, ps4.updateState)
-    rospy.Subscriber("CSEI/observer", observer_message, observer.callback_observer)
-    rospy.Subscriber("CSEI/s", Float64)
+    rospy.Subscriber("CSEI/observer", observer_message, observer.callback)
+    rospu.Subscriber("CSEI/reference", reference_message, reference.callback)
     gain_client = dynamic_reconfigure.client.Client('gain_server', timeout=30, config_callback = Gains.callback)
 
-
+# Destroy node when prompted
 def nodeEnd():
     global node
     node.destroy_node()

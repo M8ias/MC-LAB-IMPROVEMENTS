@@ -8,7 +8,10 @@ from messages.msg import observer_message
 import numpy as np
 import dynamic_reconfigure.client
 
-class qualisys():
+class Qualisys():
+    """
+    Retrieves qualisys measurements by listening to the /qualisys/CSEI/odom topic
+    """
     def __init__(self):
         self.odom = Odometry()
         self.eta = np.zeros(3)
@@ -30,11 +33,6 @@ class qualisys():
 
 
 class UVector():
-    #leftRotorThrust = 0.0
-    #rightRotorThrust = 0.0
-    #bowRotorThrust = 0.0
-    #leftRotorAngle = 0.0
-    #rightRotorAngle = 0.0
     Udata = [0.0, 0.0, 0.0, 0.0, 0.0]
 
     def updateU(self, message):
@@ -54,7 +52,7 @@ class Tau():
     def getTau(self):
         return self.tau
 
-class Observer_Conversationalist():
+class Observer_Converser():
     def __init__(self):
         self.observer_msg = observer_message()
         self.pub = rospy.Publisher('CSEI/observer/', observer_message, queue_size=1)
@@ -62,12 +60,13 @@ class Observer_Conversationalist():
         self.nu_hat = np.array([0, 0, 0])
         self.bias_hat = np.array([0, 0 ,0])
 
-    def callback_observer_data(self, msg):
+    def callback(self, msg):
         self.eta_hat = msg.eta
         self.nu_hat = msg.nu
         self.bias_hat = msg.bias
-    
-    def publish_observer_data(self, eta_hat, nu_hat, bias_hat):
+
+    # Publishes the to the CSEI/observer topic
+    def publish(self, eta_hat, nu_hat, bias_hat):
         self.observer_msg.eta = eta_hat
         self.observer_msg.nu = nu_hat
         self.observer_msg.bias = bias_hat
@@ -96,23 +95,23 @@ class Observer_Gains():
     def string2array(self, string):
         return np.array(list(map(int, string.split(',')))) # Suuuuuuuuper scuffed
 
-qualisys = qualisys()
+qualisys = Qualisys()
 Udata = UVector()
-observer_data = Observer_Conversationalist()
+observer = Observer_Converser()
 Gains = Observer_Gains()
 Tau  = Tau()
 
-
+# Initialize observer node
 def observerNodeInit():
     global pub, node
-    node = rospy.init_node('stud_odom_node')
+    node = rospy.init_node('Observer node')
     rospy.Subscriber("/qualisys/CSEI/odom", Odometry, qualisys.updateQualisysOdometry)
     rospy.Subscriber("CSEI/u", Float64MultiArray, Udata.updateU)
-    rospy.Subscriber("CSEI/observer", observer_message, observer_data.callback_observer_data)
+    rospy.Subscriber("CSEI/observer", observer_message, observer.callback)
     rospy.Subscriber("CSEI/tau", Float64MultiArray, Tau.updateTau)
     gain_client = dynamic_reconfigure.client.Client('gain_server', timeout=30, config_callback = Gains.callback)
     
    
-
+# Destroy observer node
 def nodeEnd():
     node.destroy_node()

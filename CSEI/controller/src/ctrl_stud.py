@@ -103,6 +103,10 @@ def guidance_line(end):
     return eta_d, nu_d, nu_d_dot
     
 def loop():
+     """
+    Handle all calls to self written functions and publishers in this function. It is called by the 
+    script that creates the ROS node and will loop
+    """
     end = np.array([3,3])
     global start
     eta_hat, nu_hat, bias_hat = observer.get_data()

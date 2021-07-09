@@ -5,12 +5,6 @@ from std_msgs.msg import Float64MultiArray
 import math
 import numpy as np
 
-"""
-stud_code_joy_controller.py is to contain all thrust allocation algorithms. 
-"""
-
-
-
 # Deafault and should always be here
 def saturate(u):
     """
@@ -40,7 +34,7 @@ def sixaxis2thruster(lStickX, lStickY, rStickX, rStickY, R2, L2):
     u = np.array([u1, u2, u3, alpha1, alpha2])
     return u
 
-### Custom code goues here ###
+### Write your code here ###
 
 def input_mapping(lStickX, lStickY, rStickX, rStickY, R2, L2):
     """
@@ -54,23 +48,7 @@ def input_mapping(lStickX, lStickY, rStickX, rStickY, R2, L2):
 
     tau = np.array([[surge], [sway], [yaw]])
     return tau
-
-def fixed_angle_thrust_allocation(tau, alpha):
-    lx = np.array([-0.4574, -0.4574, 0.3875])
-    ly = np.array([-0.055, 0.055, 0])
-    u = np.zeros(5)
-
-    B_ext = np.array([[0, 1, 0, 1, 0], [1, 0, 1, 0, 1], [lx[2], -ly[0], lx[0], -ly[1], lx[1]]])
-    K =np.array([
-        [2.629, 0, 0, 0, 0],
-        [0, 1.030, 0, 0, 0],
-        [0, 0, 1.030, 0, 0],
-        [0, 0, 0, 1.030, 0],
-        [0, 0, 0, 0, 1.030]
-    ])
     
-
-
 def extended_thrust_allocation(tau):
     """ 
     An extended thrust algorithm
@@ -98,8 +76,13 @@ def extended_thrust_allocation(tau):
     u[4] = math.atan2(u_ext[4], u_ext[3])
     return u
 
+
+### End of student code ###
 def loop():
-    # Call your thrust allocation algorithm here. 
+    """
+    Handle all calls to self written functions and publishers in this function. It is called by the 
+    script that creates the ROS node and will loop
+    """
     tau = input_mapping(ps4.lStickX, ps4.lStickY, ps4.rStickX, ps4.rStickY, ps4.R2, ps4.L2)
     u = extended_thrust_allocation(tau)
     Udata.publish(u)
