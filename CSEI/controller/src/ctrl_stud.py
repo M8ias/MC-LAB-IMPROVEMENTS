@@ -8,6 +8,7 @@ from std_msgs.msg import Float64MultiArray
 from ctrl_joy import extended_thrust_allocation
 
 s = 0
+start = np.zeros(2)
 
 def regulator(eta_hat, nu_hat, eta_d, nu_d, nu_d_dot, mu, Uref, Kp, Kd):    
     global s
@@ -83,10 +84,32 @@ def guidance_system():
 
     return eta_d, nu_d, nu_d_dot
 
+def guidance_line(end):
+    eta_d = np.zeros(3)
+    nu_d = np.zeros(3)
+    nu_d_dot = np.zeros(3)
+    eps = 0.0001
+    global s
+    global start
+    print(s)
+
+    eta_d[0] = s*end[0] + (1-s)*start[0]
+    eta_d[1] = s*end[1] + (1-s)*start[1]
+    eta_d[2] = math.atan((end[1]-start[1])/(end[0]-start[0] + eps))
+
+    nu_d[0] = end[0] - start[0]
+    nu_d[1] = end[1] - start[1]
+
+    return eta_d, nu_d, nu_d_dot
+    
 def loop():
+    end = np.array([3,3])
+    global start
     eta_hat, nu_hat, bias_hat = observer.get_data()
     Kp, Kd, Ki, mu, Uref = Gains.get_data()
-    eta_d, nu_d, nu_d_dot = guidance_system()
+    if start.all() == 0:
+        start = np.array([eta_hat[1], eta_hat[2]])
+    eta_d, nu_d, nu_d_dot = guidance_line(end)
     reference.publish_ref(eta_d, nu_d, nu_d_dot)
     eta_d = eta_d[np.newaxis].T
     nu_d = nu_d[np.newaxis].T

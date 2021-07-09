@@ -62,10 +62,8 @@ def loop():
     new_tau[1] = tau[1][0]
     new_tau[2] = tau[2][0]
     eta = qualisys.getQualisysOdometry()
-    print(eta)
     old_eta_hat, old_nu_hat, old_bias_hat = observer_data.get_observer_data()
     L1, L2, L3 = Gains.get_observer_gains()
     eta_hat, nu_hat, bias_hat = linear_observer(old_eta_hat, old_nu_hat, old_bias_hat, eta, new_tau, L1, L2, L3)
-    print(eta_hat)
     observer_data.publish_observer_data(eta_hat, nu_hat, bias_hat)
     return 0

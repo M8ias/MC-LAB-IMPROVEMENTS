@@ -8,6 +8,10 @@ import numpy as np
 """
 stud_code_joy_controller.py is to contain all thrust allocation algorithms. 
 """
+
+
+
+# Deafault and should always be here
 def saturate(u):
     """
     Saturate ensures that the input to the actuator remains bounded to the interval [-1, 1]
@@ -36,6 +40,7 @@ def sixaxis2thruster(lStickX, lStickY, rStickX, rStickY, R2, L2):
     u = np.array([u1, u2, u3, alpha1, alpha2])
     return u
 
+### Custom code goues here ###
 
 def input_mapping(lStickX, lStickY, rStickX, rStickY, R2, L2):
     """

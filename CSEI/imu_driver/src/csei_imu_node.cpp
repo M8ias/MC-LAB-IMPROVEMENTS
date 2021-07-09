@@ -1,7 +1,7 @@
 #include <string>
 #include "ros/ros.h"
 #include "sensor_msgs/Imu.h"
-#include "adis16470_driver/adis16470.h"
+#include "adis16470.h"
 
 class ImuNode {
     public:
@@ -13,9 +13,9 @@ class ImuNode {
         double rate_;
 
     explicit ImuNode(ros::NodeHandle nh)
-        : node_handle(nh)
+        : node_handle_(nh)
         {
-            node_handle_.param("device", device_, std::string("/dev/I2C-1"));
+            node_handle_.param("device", device_, std::string("/dev/i2c-1"));
             node_handle_.param("frame_id", frame_id_, std::string("imu"));
             node_handle_.param("rate", rate_, 100.0);
 
@@ -25,12 +25,12 @@ class ImuNode {
         
 
         // Data publisher
-        imu_data_pub_ = node_handle_.advertise<sensor_msgs::Imu>("data_raw", 100);
+        imu_data_pub_ = node_handle_.advertise<sensor_msgs::Imu>("imu", 100);
         }
 
     ~ImuNode()
     {
-        imu.closePort()
+        imu.closePort();
     }
 
     bool is_opened(void)
@@ -46,6 +46,7 @@ class ImuNode {
         }
         
         //  Wait 
+        return true;
     }
 
     int publish_imu_data()
@@ -71,6 +72,7 @@ class ImuNode {
     data.orientation.w = 1;
 
     imu_data_pub_.publish(data);
+    return 0;
     }
 
     bool spin()
@@ -81,23 +83,23 @@ class ImuNode {
         {
             if (imu.update() == 0)
             {
-                publish_imu_data()[
+                publish_imu_data();
             }
             else 
             {
-                ROS_ERROR("Cannot update!")
+                ROS_ERROR("Cannot update!");
             }
             ros::spinOnce();
             loop_rate.sleep();
         }
-    retrun true;   
+    return true;   
     }
 };
 
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "imu");
-    ros::NodeHandle nh('~')
+    ros::NodeHandle nh;
     ImuNode node(nh);
 
     node.open();
@@ -107,7 +109,7 @@ int main(int argc, char** argv)
         sleep(1);
         node.open();
     }
-    node.spin()
+    node.spin();
     return(0);
 }
    
