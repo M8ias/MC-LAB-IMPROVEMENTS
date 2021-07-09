@@ -261,7 +261,7 @@ void CSAD_Actuator::setMotorPower(uint8_t motor, double power) {
  */
 void CSAD_Actuator::setAllMotorPower(double power[]) {
   for (int i = 0; i < 6; i++){
-	setPWM(i + 1, 0, (power[i]));
+	setPWM(i + 1, 0, (0.5*power[i]));
   }
 }
 
