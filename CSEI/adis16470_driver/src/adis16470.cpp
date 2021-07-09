@@ -23,7 +23,7 @@
 Adis16470::Adis16470()
   : fd_(-1)
 {
-}
+
 
 /**
  * @brief Open device
