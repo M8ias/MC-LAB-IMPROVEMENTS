@@ -11,6 +11,6 @@
   <param name="water" command="$(find xacro)/xacro $(arg water)" />
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find boat_model)/rviz_config/Boat.rviz" required="true" />
 
-  <node name="tf_publisher" pkg="tf_publisher" type="node.py" />
+  <node name="tf_publisher" pkg="boat_model" type="node.py" />
 
 </launch>

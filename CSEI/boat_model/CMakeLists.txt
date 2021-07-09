@@ -8,13 +8,15 @@ project(boat_model)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  joint_state_publisher
-  joint_state_publisher_gui
-  robot_state_publisher
-  rospy
-  rviz
-  urdf
-  xacro
+joint_state_publisher
+joint_state_publisher_gui
+robot_state_publisher
+rospy
+rviz
+urdf
+xacro
+nav_msgs
+tf
 )
 
 ## System dependencies are found with CMake's conventions
