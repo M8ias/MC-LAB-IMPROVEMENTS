@@ -13,7 +13,7 @@
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
 #include <sys/ioctl.h>
-#include "adis16470_driver/adis16470.h"
+#include "adis16470.h"
 
 
 

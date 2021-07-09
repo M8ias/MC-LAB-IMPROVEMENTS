@@ -3,7 +3,7 @@ from sensor_msgs.msg import Joy
 from nav_msgs.msg import Odometry
 import numpy as np
 import dynamic_reconfigure.client
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64MultiArray, Float64
 from messages.msg import observer_message, reference_message
 
 
@@ -134,6 +134,7 @@ def controllNodeInit():
     node = rospy.init_node('stud_controll_node')
     rospy.Subscriber("joy", Joy, ps4.updateState)
     rospy.Subscriber("CSEI/observer", observer_message, observer.callback_observer)
+    rospy.Subscriber("CSEI/s", Float64)
     gain_client = dynamic_reconfigure.client.Client('gain_server', timeout=30, config_callback = Gains.callback)
 
 
