@@ -251,7 +251,7 @@ void CSAD_Actuator::setPWMFreq(int freq) {
  @param power power to set the motor to. -1.0 being 100% reverse 1.0 being 100% forward.
  */
 void CSAD_Actuator::setMotorPower(uint8_t motor, double power) {
-	setPWM(motor, 0, (power));
+	setPWM(motor, 0, 0.5*(power));
 }
 
 /**
@@ -261,7 +261,7 @@ void CSAD_Actuator::setMotorPower(uint8_t motor, double power) {
  */
 void CSAD_Actuator::setAllMotorPower(double power[]) {
   for (int i = 0; i < 6; i++){
-	setPWM(i + 1, 0, (power[i]));
+	setPWM(i + 1, 0, (0.5*power[i]));
   }
 }
 
