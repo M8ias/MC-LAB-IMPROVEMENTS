@@ -96,10 +96,10 @@ class Observer_Gains():
         return np.array(list(map(int, string.split(',')))) # Suuuuuuuuper scuffed
 
 qualisys = Qualisys()
-u-data = UVector()
+Udata = UVector()
 observer = Observer_Converser()
-gains = Observer_Gains()
-tau  = Tau()
+Gains = Observer_Gains()
+Tau  = Tau()
 
 # Initialize observer node
 def observerNodeInit():

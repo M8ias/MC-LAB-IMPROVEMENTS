@@ -63,26 +63,24 @@ class UVector():
 
     
 
-class Observer_Converser():
+class Observer_Listener():
+    """
+    The Observer_Listener object listens to the CSEI/observer topic. 
+    """
+    # Initialize position in [0; 0; 0]
     def __init__(self):
         self.observer_msg = observer_message()
-        self.pub = rospy.Publisher('CSEI/observer/', observer_message, queue_size=1)
-        self.eta_hat = np.array([0, 0, 0])
-        self.nu_hat = np.array([0, 0, 0])
-        self.bias_hat = np.array([0, 0 ,0])
+        self.eta_hat = np.array([0, 0, 0])[np.newaxis].T
+        self.nu_hat = np.array([0, 0, 0])[np.newaxis].T
+        self.bias_hat = np.array([0, 0, 0])[np.newaxis].T
 
-    def callback(self, msg):
-        self.eta_hat = msg.eta
-        self.nu_hat = msg.nu
-        self.bias_hat = msg.bias
+    # Callback function is called when the topic is updated
+    def callback(self, msg): 
+        self.eta_hat = np.array(msg.eta)[np.newaxis].T
+        self.nu_hat = np.array(msg.nu)[np.newaxis].T
+        self.bias_hat = np.array(msg.bias)[np.newaxis].T
 
-    # Publishes the to the CSEI/observer topic
-    def publish(self, eta_hat, nu_hat, bias_hat):
-        self.observer_msg.eta = eta_hat
-        self.observer_msg.nu = nu_hat
-        self.observer_msg.bias = bias_hat
-        self.pub.publish(self.observer_msg)
-
+    # Fetches data of observer. Dimensions are 3x1 of vectors
     def get_observer_data(self):
         return self.eta_hat, self.nu_hat, self.bias_hat
 
@@ -94,15 +92,15 @@ class Reference_Converser():
     def __init__(self):
         self.ref_msg = reference_message()
         self.pub = rospy.Publisher('/CSEI/reference/', reference_message, queue_size=1)
-        self.eta_d = np.array([0, 0, 0])
-        self.nu_d = np.array([0, 0, 0])
-        self.nu_d_dot = np.array([0, 0, 0])
+        self.eta_d = np.array([0, 0, 0])[np.newaxis].T
+        self.nu_d = np.array([0, 0, 0])[np.newaxis].T
+        self.nu_d_dot = np.array([0, 0, 0])[np.newaxis].T
 
     # Callback function is called when the topic is updated
     def callback(self, msg):
-        self.eta_d = np.array(msg.eta_d)
-        self.nu_d = np.array(msg.nu_d)
-        self.nu_d_dot = np.array(msg.nu_d_dot)
+        self.eta_d = np.array(msg.eta_d)[np.newaxis].T
+        self.nu_d = np.array(msg.nu_d)[np.newaxis].T
+        self.nu_d_dot = np.array(msg.nu_d_dot)[np.newaxis].T
 
     # Publishes new gains to the reference topic. These should be numpy arrays with n=3
     def publish(self, eta_d, nu_d, nu_dot_d):
@@ -148,10 +146,10 @@ class Controller_Gains():
 
 # Build the objects to be imported
 ps4 = controller()
-u_data = UVector()
+Udata = UVector()
 odometry = Odometry()
 observer = Observer_Listener()
-gains = Controller_Gains()
+Gains = Controller_Gains()
 reference = Reference_Converser()
 
 
