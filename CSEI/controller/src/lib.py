@@ -48,19 +48,16 @@ class UVector():
     The UVector initializing and publishing the computed actuator commands
     """
     def __init__(self):
-        #self.leftRotorThrust = 0.0
-        #self.rightRotorThrust = 0.0
-        #self.bowRotorThrust = 0.0
-        #self.leftRotorAngle = 0.0
-        #self.rightRotorAngle = 0.0
-        self.Udata = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.Udata = np.zeros(5)
         self.pub = rospy.Publisher('CSEI/u', Float64MultiArray, queue_size = 1)
         self.message = Float64MultiArray()
 
     def publish(self, data):
         self.message.data = data
         self.pub.publish(self.message)
-
+        
+    def callback(self, udata):
+        self.Udata = udata
     
 
 class Observer_Converser():
@@ -95,25 +92,25 @@ class Reference_Converser():
         self.ref_msg = reference_message()
         self.pub = rospy.Publisher('/CSEI/reference/', reference_message, queue_size=1)
         self.eta_d = np.array([0, 0, 0])
-        self.nu_d = np.array([0, 0, 0])
-        self.nu_d_dot = np.array([0, 0, 0])
+        self.eta_ds = np.array([0, 0, 0])
+        self.eta_ds2 = np.array([0, 0, 0])
 
     # Callback function is called when the topic is updated
     def callback(self, msg):
         self.eta_d = np.array(msg.eta_d)
-        self.nu_d = np.array(msg.nu_d)
-        self.nu_d_dot = np.array(msg.nu_d_dot)
+        self.eta_ds = np.array(msg.eta_ds)
+        self.eta_ds2 = np.array(msg.eta_ds2)
 
     # Publishes new gains to the reference topic. These should be numpy arrays with n=3
-    def publish(self, eta_d, nu_d, nu_dot_d):
+    def publish(self, eta_d, eta_ds, eta_ds2):
         self.ref_msg.eta_d = eta_d
-        self.ref_msg.nu_d = nu_d
-        self.ref_msg.nu_d_dot = nu_dot_d
+        self.ref_msg.eta_ds = eta_ds
+        self.ref_msg.eta_ds2 = eta_ds2
         self.pub.publish(self.ref_msg)
 
     # Retrieve the references from the object 
     def get_ref(self):
-        return self.eta_d, self.nu_d, self.nu_d_dot
+        return self.eta_d, self.eta_ds, self.eta_ds2
     
 class Controller_Gains():
     """
@@ -144,13 +141,12 @@ class Controller_Gains():
     # the string into a numpy array when they are retrieved. Very scuffed :^)
 
     def string2array(self, string): 
-        return np.array(list(map(float, string.split(',')))) # Not proud of this one
-
+        return np.array(list(map(float, string.split(',')))) 
 # Build the objects to be imported
 ps4 = controller()
 u_data = UVector()
 odometry = Odometry()
-observer = Observer_Listener()
+observer = Observer_Converser()
 gains = Controller_Gains()
 reference = Reference_Converser()
 
@@ -160,9 +156,10 @@ def controllNodeInit():
     global node
     node = rospy.init_node('controll_node')
     rospy.Subscriber("joy", Joy, ps4.updateState)
+    rospy.Subscriber("CSEI/u", Float64MultiArray, u_data.callback)
     rospy.Subscriber("CSEI/observer", observer_message, observer.callback)
-    rospu.Subscriber("CSEI/reference", reference_message, reference.callback)
-    gain_client = dynamic_reconfigure.client.Client('gain_server', timeout=30, config_callback = Gains.callback)
+    rospy.Subscriber("CSEI/reference", reference_message, reference.callback)
+    gain_client = dynamic_reconfigure.client.Client('gain_server', timeout=30, config_callback = gains.callback)
 
 # Destroy node when prompted
 def nodeEnd():

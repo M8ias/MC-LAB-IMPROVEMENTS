@@ -1,3 +1,3 @@
 float64[] eta_d
-float64[] nu_d
-float64[] nu_d_dot
+float64[] eta_ds
+float64[] eta_ds2

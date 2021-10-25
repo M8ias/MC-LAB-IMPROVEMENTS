@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import math
-from math_tools import yaw2quat
 import numpy as np
 import rospy
-
-from Kinematics import yaw2quat, Rzyx, wrap2pi
+from math_tools import yaw2quat, Rzyx, rad2pipi
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float64MultiArray
 
@@ -94,7 +92,7 @@ class CSEI:
         R = Rzyx(psi)
         self.eta_dot = np.dot(R, self.nu)
         self.eta = self.eta + self.dt*self.eta_dot
-        self.eta[2] = wrap2pi(self.eta[2]) # Wrap the angle
+        self.eta[2] = rad2pipi(self.eta[2]) # Wrap the angle
 
     def set_nu(self):
         A = self._M
@@ -159,11 +157,19 @@ class CSEI:
 
     ### End of publishers and subscribers ###
 
+initial_conditions = np.array([[0],[0],[0]])
+ship = CSEI(initial_conditions)
 
 def main():
-    initial_conditions = np.array([[0],[0],[0]])
+   
     rospy.init_node('HIL_simulation')
-    ship = CSEI(initial_conditions)
+    rate = rospy.Rate(100)
+    rospy.Subscriber("CSEI/u", Float64MultiArray, ship.callback)
+  
+    while not rospy.is_shutdown():
+        ship.publishOdom()
+        rate.sleep()
+
     rospy.spin()
     rospy.shutdown()
 

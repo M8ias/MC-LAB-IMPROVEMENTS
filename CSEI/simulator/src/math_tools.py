@@ -1,9 +1,9 @@
 import numpy as np
 import math
 
-def wrap2pi(psi):
-     psi = np.mod(psi + math.pi, 2*math.pi)-math.pi
-     return psi
+def rad2pipi(x):
+    y = np.arctan2(np.sin(x),np.cos(x))
+    return y
     
 def Rzyx(psi):
     """
